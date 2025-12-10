@@ -1,0 +1,412 @@
+import React, { useState } from 'react';
+import { Search, Wrench, Hammer, User, Phone, ClipboardCheck, AlertTriangle, Info, X, ChevronRight, Calendar, Smartphone, FileText, CheckCircle2, Clock, Package } from 'lucide-react';
+
+// --- AYARLAR ---
+const GOOGLE_SHEET_ID = ""; 
+const CURRENT_YEAR = "2025";
+const SHEET_NAME_PREFIX = "ARIZA_TAKIP"; 
+const LOGO_URL = "https://www.upload.ee/image/18885746/Hedeflogo_arkapembe.png"; 
+
+// --- DEMO VERİLERİ ---
+const DEMO_DATA = [
+  {
+    tc_no: "11111111111",
+    telefon: "5320000000",
+    musteri: "Demo Müşteri (Test)",
+    ariza_durumu: "Parça Bekleniyor",
+    urun_adi: "Hedef Lux Koltuk Takımı",
+    son_islem_tarihi: "10.12.2025",
+    islem_gecmisi_raw: "10.12.2025|Parça Siparişi Verildi|Fabrika; 09.12.2025|Servis Kaydı Açıldı|Müşteri Hizmetleri"
+  },
+  {
+    tc_no: "12345678901",
+    telefon: "5325554433",
+    musteri: "Ahmet Yılmaz",
+    ariza_durumu: "Tamamlandı",
+    urun_adi: "Liron Yatak Odası",
+    son_islem_tarihi: "08.12.2025",
+    islem_gecmisi_raw: "08.12.2025|Sorun Giderildi|Teknik Ekip; 05.12.2025|Kayıt Oluşturuldu|Mağaza"
+  }
+];
+
+export default function App() {
+  const [query, setQuery] = useState('');
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showGuide, setShowGuide] = useState(false);
+
+  const maskData = (str, type) => {
+    if (!str) return '';
+    if (type === 'phone') {
+      return str.length > 7 ? str.substring(0, 4) + ' *** ** ' + str.substring(str.length - 2) : '***';
+    }
+    if (type === 'tc') {
+      return str.length > 5 ? str.substring(0, 3) + '*****' + str.substring(str.length - 3) : '*****';
+    }
+    return str;
+  };
+
+  const parseCSV = (text) => {
+    const lines = text.split('\n').filter(line => line.trim() !== '');
+    if (lines.length === 0) return [];
+    
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/['"]+/g, ''));
+    
+    return lines.slice(1).map(line => {
+      const regex = /(?:,|\n|^)("(?:(?:"")*|[^"]*)*"|[^",\n]*|(?:\n|$))/g;
+      const matches = [];
+      let match;
+      while ((match = regex.exec(line)) !== null) {
+         if (match[1] !== undefined) matches.push(match[1].replace(/['"]+/g, '').trim());
+      }
+      const values = matches.length > 0 ? matches : line.split(',');
+      const obj = {};
+      
+      headers.forEach((header, index) => {
+        let key = header;
+        if (header.includes('tc') || header.includes('kimlik')) key = 'tc_no';
+        else if (header.includes('tel') || header.includes('cep')) key = 'telefon';
+        else if (header.includes('mteri') || header.includes('isim')) key = 'musteri';
+        else if (header.includes('ariza') || header.includes('durum') || header.includes('tespit')) key = 'ariza_durumu';
+        else if (header.includes('rün') || header.includes('malzeme')) key = 'urun_adi';
+        else if (header.includes('tarih')) key = 'son_islem_tarihi';
+        else if (header.includes('gecmis') || header.includes('açıklama')) key = 'islem_gecmisi_raw';
+        obj[key] = values[index] ? values[index].trim() : '';
+      });
+
+      if (obj.islem_gecmisi_raw) {
+        try {
+          obj.history = obj.islem_gecmisi_raw.split(';').map(step => {
+            const parts = step.split('|');
+            return {
+              date: parts[0]?.trim() || '',
+              status: parts[1]?.trim() || 'İşlem',
+              note: parts[2]?.trim() || ''
+            };
+          }).filter(item => item.date !== '');
+        } catch (e) {
+          obj.history = [];
+        }
+      } else {
+        obj.history = [];
+      }
+      return obj;
+    });
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!query) return;
+    setLoading(true);
+    setError('');
+    setResult(null);
+
+    const targetSheetName = `${SHEET_NAME_PREFIX}_${CURRENT_YEAR}`;
+
+    try {
+      let data = [];
+      if (!GOOGLE_SHEET_ID) {
+        await new Promise(resolve => setTimeout(resolve, 800));
+        data = DEMO_DATA.map(item => {
+           const parsedHistory = item.islem_gecmisi_raw.split(';').map(step => {
+              const parts = step.split('|');
+              return { date: parts[0]?.trim(), status: parts[1]?.trim(), note: parts[2]?.trim() };
+          });
+          return { ...item, history: parsedHistory };
+        });
+      } else {
+        const csvUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(targetSheetName)}`;
+        const response = await fetch(csvUrl);
+        if (!response.ok) throw new Error(`"${targetSheetName}" sekmesi bulunamadı.`);
+        const text = await response.text();
+        data = parseCSV(text);
+      }
+
+      const cleanQuery = query.replace(/\D/g, '');
+      const found = data.find(item => {
+        const itemTc = item.tc_no?.replace(/\D/g, '') || '';
+        const itemTel = item.telefon?.replace(/\D/g, '') || '';
+        return itemTc.includes(cleanQuery) || itemTel.includes(cleanQuery);
+      });
+
+      if (found) {
+        setResult(found);
+      } else {
+        setError(`Bu bilgilerle eşleşen kayıt bulunamadı.`);
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'Veri kaynağına erişilemiyor.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isCompleted = result?.ariza_durumu?.toLowerCase().includes('tamam') || result?.ariza_durumu?.toLowerCase().includes('teslim');
+  
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
+      
+      {/* Header */}
+      <header className="bg-slate-900 shadow-xl sticky top-0 z-30 transition-all">
+        <div className="max-w-5xl mx-auto px-4 h-16 sm:h-20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+             <div className="bg-white rounded-lg p-1 flex items-center justify-center">
+                <img src={LOGO_URL} alt="Hedef AVM" className="h-8 sm:h-10 w-auto object-contain" />
+             </div>
+             <div className="hidden sm:flex flex-col">
+                <span className="font-bold text-lg text-white leading-tight">Teknik Servis</span>
+                <span className="text-xs text-amber-400 font-medium tracking-wider">MÜŞTERİ PORTALI</span>
+             </div>
+          </div>
+          <button 
+            onClick={() => setShowGuide(true)}
+            className="text-xs sm:text-sm font-bold text-slate-900 bg-amber-400 hover:bg-amber-300 active:scale-95 px-3 py-2 sm:px-4 sm:py-2.5 rounded-full flex items-center gap-2 transition-all shadow-md shadow-amber-900/20"
+          >
+            <Info size={16} />
+            <span className="hidden xs:inline">Yardım</span>
+          </button>
+        </div>
+      </header>
+
+      <main className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
+        
+        {/* Search Area */}
+        <div className="bg-white rounded-3xl shadow-xl shadow-slate-200 p-6 sm:p-10 mb-8 border border-slate-100 text-center relative overflow-hidden group">
+          {/* Decorative Gradient */}
+          <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500"></div>
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-amber-50 rounded-full blur-2xl opacity-50 pointer-events-none group-hover:scale-150 transition-transform duration-700"></div>
+          
+          <div className="relative z-10">
+            <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-700 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold mb-4 border border-amber-100">
+              <Hammer size={14} className="sm:w-4 sm:h-4" /> Satış Sonrası Hizmetler
+            </div>
+            
+            <h1 className="text-2xl sm:text-4xl font-black mb-3 text-slate-900 tracking-tight">
+              Arıza Durum Sorgulama
+            </h1>
+            <p className="text-sm sm:text-base text-slate-500 mb-8 max-w-lg mx-auto leading-relaxed">
+              Teknik servis kaydınızın detaylarını ve anlık durumunu öğrenmek için lütfen bilgilerinizi giriniz.
+            </p>
+            
+            <form onSubmit={handleSearch} className="relative max-w-xl mx-auto flex flex-col sm:flex-row gap-3">
+              
+              <div className="relative flex-1">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                   <Search size={20} />
+                </div>
+                <input
+                  type="text"
+                  placeholder="TC Kimlik No veya Telefon"
+                  className="w-full h-12 sm:h-14 pl-12 pr-4 rounded-xl sm:rounded-2xl border-2 border-slate-100 bg-slate-50 focus:bg-white focus:border-amber-400 focus:ring-4 focus:ring-amber-50 outline-none transition-all font-semibold text-slate-800 placeholder:text-slate-400 text-sm sm:text-base shadow-inner"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={loading || !query}
+                className="h-12 sm:h-14 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white px-6 sm:px-8 rounded-xl sm:rounded-2xl font-bold tracking-wide transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-slate-200 flex items-center justify-center gap-2 sm:w-auto w-full text-sm sm:text-base"
+              >
+                {loading ? <Wrench className="animate-spin w-5 h-5" /> : 'SORGULA'}
+              </button>
+            </form>
+
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-2 text-xs text-slate-400">
+              <span>Örnek Test Verisi:</span>
+              <span className="font-mono font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded select-all cursor-pointer hover:bg-slate-200 transition-colors" onClick={() => setQuery("11111111111")}>11111111111</span>
+            </div>
+
+            {error && (
+              <div className="mt-6 p-4 bg-red-50 text-red-800 rounded-2xl flex items-center justify-center gap-3 border border-red-100 animate-in fade-in slide-in-from-top-2">
+                <AlertTriangle className="w-5 h-5 flex-shrink-0 text-red-500" />
+                <p className="font-medium text-sm">{error}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Result Area */}
+        {result && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            
+            {/* Main Status Card */}
+            <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/60 border border-slate-100 overflow-hidden">
+              {/* Header of Card */}
+              <div className={`px-6 sm:px-8 py-6 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${isCompleted ? 'bg-green-50/50 border-green-100' : 'bg-amber-50/50 border-amber-100'}`}>
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shadow-sm ${isCompleted ? 'bg-green-500 text-white' : 'bg-amber-400 text-slate-900'}`}>
+                    {isCompleted ? <CheckCircle2 size={28} /> : <Clock size={28} />}
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">Güncel Durum</span>
+                    <h2 className={`text-lg sm:text-2xl font-black leading-none ${isCompleted ? 'text-green-700' : 'text-slate-800'}`}>
+                      {result.ariza_durumu}
+                    </h2>
+                  </div>
+                </div>
+                {result.son_islem_tarihi && (
+                    <div className="flex sm:block items-center gap-2 sm:text-right w-full sm:w-auto bg-white/60 sm:bg-transparent p-2 sm:p-0 rounded-lg">
+                        <span className="text-xs text-slate-400 font-bold uppercase tracking-wide">Son İşlem</span>
+                        <p className="font-bold text-slate-700 text-sm sm:text-base">{result.son_islem_tarihi}</p>
+                    </div>
+                )}
+              </div>
+              
+              {/* Details Grid */}
+              <div className="p-6 sm:p-8 bg-white">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+                  
+                  <div className="group">
+                     <div className="flex items-center gap-3 mb-2">
+                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-amber-100 group-hover:text-amber-600 transition-colors">
+                            <User size={16} />
+                        </div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Müşteri</p>
+                     </div>
+                     <p className="text-base sm:text-lg font-bold text-slate-800 pl-11">{result.musteri}</p>
+                  </div>
+
+                  <div className="group">
+                     <div className="flex items-center gap-3 mb-2">
+                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-amber-100 group-hover:text-amber-600 transition-colors">
+                            <Package size={16} />
+                        </div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Ürün Bilgisi</p>
+                     </div>
+                     <p className="text-base sm:text-lg font-bold text-slate-800 pl-11">{result.urun_adi}</p>
+                  </div>
+
+                  <div className="group">
+                     <div className="flex items-center gap-3 mb-2">
+                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-amber-100 group-hover:text-amber-600 transition-colors">
+                            <Phone size={16} />
+                        </div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Telefon</p>
+                     </div>
+                     <p className="text-base sm:text-lg font-mono font-medium text-slate-700 pl-11">{maskData(result.telefon, 'phone')}</p>
+                  </div>
+
+                  <div className="group">
+                     <div className="flex items-center gap-3 mb-2">
+                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-amber-100 group-hover:text-amber-600 transition-colors">
+                            <FileText size={16} />
+                        </div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">TC Kimlik</p>
+                     </div>
+                     <p className="text-base sm:text-lg font-mono font-medium text-slate-700 pl-11">{maskData(result.tc_no, 'tc')}</p>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            {/* Timeline History */}
+            <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/60 border border-slate-100 p-6 sm:p-8">
+              <h3 className="text-lg font-black text-slate-900 mb-8 flex items-center gap-3">
+                <span className="w-8 h-8 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center">
+                    <ClipboardCheck size={18} />
+                </span>
+                İşlem Tarihçesi
+              </h3>
+              
+              <div className="relative pl-3 sm:pl-4 space-y-8 sm:space-y-10">
+                {/* Vertical Line */}
+                <div className="absolute top-3 left-[19px] sm:left-[23px] bottom-3 w-0.5 bg-slate-100"></div>
+
+                {result.history && result.history.length > 0 ? (
+                    result.history.map((step, index) => (
+                        <div key={index} className="relative flex gap-4 sm:gap-6 group">
+                            {/* Dot */}
+                            <div className={`relative z-10 w-4 h-4 sm:w-5 sm:h-5 rounded-full border-4 transition-all duration-300
+                                ${index === 0 
+                                    ? 'bg-amber-500 border-amber-100 ring-4 ring-amber-50 scale-110' 
+                                    : 'bg-white border-slate-300 group-hover:border-amber-300'}`}>
+                            </div>
+                            
+                            {/* Content */}
+                            <div className={`flex-1 -mt-1.5 p-4 sm:p-5 rounded-2xl border transition-all duration-300 ${index === 0 ? 'bg-amber-50/50 border-amber-200 shadow-sm' : 'bg-white border-slate-100 group-hover:border-slate-200 hover:shadow-sm'}`}>
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-1">
+                                    <h4 className={`text-base sm:text-lg font-bold ${index === 0 ? 'text-amber-900' : 'text-slate-800'}`}>
+                                        {step.status}
+                                    </h4>
+                                    <span className="self-start sm:self-auto text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">
+                                        {step.date}
+                                    </span>
+                                </div>
+                                <p className="text-sm text-slate-600 leading-relaxed">
+                                    {step.note}
+                                </p>
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="text-center py-6 text-slate-400 italic bg-slate-50 rounded-2xl">
+                        Detaylı işlem geçmişi henüz eklenmemiş.
+                    </div>
+                )}
+              </div>
+            </div>
+
+          </div>
+        )}
+      </main>
+
+      {/* Guide Modal */}
+      {showGuide && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative animate-in zoom-in-95 duration-300">
+            <div className="sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100 p-5 flex justify-between items-center z-10">
+                <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2 text-slate-900">
+                    <FileText className="text-amber-500" /> Kurulum Rehberi
+                </h2>
+                <button onClick={() => setShowGuide(false)} className="bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors text-slate-500"><X size={20}/></button>
+            </div>
+            
+            <div className="p-6 sm:p-8 space-y-6">
+              <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl text-sm text-blue-800 flex gap-3">
+                <Info className="flex-shrink-0" size={20} />
+                <p>Bu sistemi kullanmak için bir Google Sheet dosyası oluşturmalı ve ID'sini kod içerisine eklemelisiniz.</p>
+              </div>
+
+              <div>
+                <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs">1</span>
+                    Sütun Başlıkları
+                </h3>
+                <p className="text-sm text-slate-500 mb-3">Excel dosyanızın 1. satırına aşağıdaki başlıkları sırasıyla yazın:</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs sm:text-sm font-mono text-slate-600">
+                    <div className="bg-slate-100 p-2 rounded border">TC Kimlik No</div>
+                    <div className="bg-slate-100 p-2 rounded border">Telefon No</div>
+                    <div className="bg-slate-100 p-2 rounded border">Müşteri İsmi</div>
+                    <div className="bg-slate-100 p-2 rounded border">Ürün Adı</div>
+                    <div className="bg-slate-100 p-2 rounded border">Arıza Durumu</div>
+                    <div className="bg-slate-100 p-2 rounded border opacity-75">Geçmiş</div>
+                </div>
+              </div>
+
+              <div>
+                 <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs">2</span>
+                    Sekme Adı
+                </h3>
+                <p className="text-sm text-slate-500 mb-2">Excel'in altındaki sekme ismini şu şekilde değiştirin:</p>
+                <code className="block bg-slate-800 text-amber-400 p-3 rounded-xl text-sm font-mono">
+                    ARIZA_TAKIP_2025
+                </code>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 text-center">
+                <button onClick={() => setShowGuide(false)} className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 py-3 rounded-xl transition w-full sm:w-auto">
+                    Kapat
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
