@@ -27,16 +27,17 @@
     </script>
     <style>
         /* SCROLL FIX & LAYOUT */
-        html, body {
-            min-height: 100%;
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            min-height: 100vh;
             margin: 0;
             padding: 0;
             background-color: #f8fafc;
-            /* Dikey scroll'u garanti et ve yatay taşmayı engelle */
-            overflow-y: auto;
+            /* Yatay taşmayı engelle, dikey scroll'u serbest bırak */
             overflow-x: hidden;
-            /* Mobil cihazlarda akıcı kaydırma */
-            -webkit-overflow-scrolling: touch;
+            position: relative;
         }
         .timeline-line { position: absolute; left: 23px; top: 10px; bottom: 10px; width: 2px; background: #e2e8f0; z-index: 0; }
     </style>
