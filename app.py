@@ -16,14 +16,16 @@ st.set_page_config(
 # -----------------------------------------------------------------------------
 st.markdown("""
     <style>
-        /* Streamlit Header ve Footer'ı tamamen gizle */
+        /* Streamlit Header, Footer ve Menüyü gizle */
         header {visibility: hidden;}
         footer {visibility: hidden;}
         #MainMenu {visibility: hidden;}
+        .stDeployButton {display:none;}
 
-        /* Ana sayfanın kaydırma çubuğunu gizle */
+        /* Ana sayfanın (Streamlit container'ı) kaydırma çubuğunu gizle */
+        /* Böylece çift scroll bar oluşmaz */
         body {
-            overflow: hidden;
+            overflow: hidden; 
             margin: 0;
             padding: 0;
         }
@@ -44,6 +46,7 @@ st.markdown("""
             height: 100vh;
             border: none;
             z-index: 999999;
+            display: block; /* Boşlukları önlemek için */
         }
     </style>
     """, unsafe_allow_html=True)
@@ -58,9 +61,10 @@ if os.path.exists(html_file_path):
         with open(html_file_path, 'r', encoding='utf-8') as f:
             html_code = f.read()
 
-        # scrolling=False yaptık çünkü CSS ile fixed full screen verdik.
-        # index.html kendi içerisinde scroll bar barındırmalıdır.
-        components.html(html_code, height=2000) # Yüksek değer, CSS ile ezilecek.
+        # DÜZELTME BURADA YAPILDI:
+        # 1. scrolling=True eklendi.
+        # 2. height değeri CSS ile ezilse de, Python tarafında bir yer kaplaması için bırakıldı.
+        components.html(html_code, height=1000, scrolling=True)
 
     except Exception as e:
         st.error(f"Hata: {e}")
