@@ -31,7 +31,7 @@
         }
     </script>
     <style>
-        /* SCROLL FIX - EN GARANTİ YÖNTEM */
+        /* SCROLL FIX */
         html, body {
             margin: 0;
             padding: 0;
@@ -43,14 +43,12 @@
             background-color: #f8fafc;
         }
         
-        /* Subtle Grid Pattern Background */
         body {
             background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
             background-size: 24px 24px;
             position: relative;
         }
 
-        /* Timeline Connector Line */
         .timeline-line { 
             position: absolute; 
             left: 23px; 
@@ -61,9 +59,18 @@
             z-index: 0; 
         }
 
-        /* Smooth Input Transition */
         .input-transition {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Pulse animation for live badge */
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+        .live-dot {
+            animation: pulse-green 2s infinite;
         }
     </style>
 </head>
@@ -71,9 +78,9 @@
 
     <!-- --- AYARLAR VE VERİ --- -->
     <script>
-        // 1. Google Sheet ID'nizi buraya yazın (Boş bırakırsanız Demo Modu çalışır)
-        const GOOGLE_SHEET_ID = ""; 
-        const SHEET_TAB_NAME = "ARIZA_TAKIP_2025"; // Excel sekme adı
+        // 1. Google Sheet ID'nizi buraya yazın
+        const GOOGLE_SHEET_ID = "1krqwD88wY1CczRYW8_sIHEEn2B8-jzJfshK9S8ZmS8k"; 
+        const SHEET_TAB_NAME = "ARIZA_TAKIP_2025"; 
         
         // Demo Verileri (Test İçin)
         const DEMO_DATA = [
@@ -83,22 +90,9 @@
                 musteri: "Demo Müşteri (Test)",
                 ariza_durumu: "Parça Bekleniyor",
                 urun_adi: "Hedef Lux Koltuk Takımı",
-                son_islem_tarihi: "10.12.2025",
+                son_islem_tarihi: "12.12.2025",
                 islem_gecmisi: [
-                    { date: "10.12.2025", status: "Parça Siparişi Verildi", note: "Fabrikadan parça bekleniyor." },
-                    { date: "09.12.2025", status: "Servis Kaydı Açıldı", note: "Müşteri talebi alındı." }
-                ]
-            },
-            {
-                tc_no: "22222222222",
-                telefon: "5555555555",
-                musteri: "Ayşe Yılmaz",
-                ariza_durumu: "Tamamlandı",
-                urun_adi: "Beko Buzdolabı",
-                son_islem_tarihi: "08.12.2025",
-                islem_gecmisi: [
-                    { date: "08.12.2025", status: "Teslim Edildi", note: "Sorun giderildi, teslimat yapıldı." },
-                    { date: "05.12.2025", status: "Atölyeye Alındı", note: "Gaz dolumu yapılacak." }
+                    { date: "12.12.2025", status: "Parça Siparişi Verildi", note: "İşlem Detayı" }
                 ]
             }
         ];
@@ -108,9 +102,7 @@
     <header class="bg-dark/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-white/10">
         <div class="max-w-4xl mx-auto px-4 h-20 flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <!-- LOGO (Arkaplan temizlendi, shadow eklendi) -->
                 <img src="https://www.upload.ee/image/18885746/Hedeflogo_arkapembe.png" alt="Logo" class="h-10 w-auto object-contain drop-shadow-lg filter brightness-110">
-                
                 <div class="hidden sm:flex flex-col border-l border-white/20 pl-4">
                     <span class="font-black text-lg text-white leading-none tracking-tight">TEKNİK SERVİS</span>
                     <span class="text-[10px] text-primary font-bold tracking-[0.2em] mt-1 uppercase opacity-90">Müşteri Portalı</span>
@@ -128,7 +120,6 @@
         
         <!-- SEARCH BOX -->
         <div class="bg-white rounded-[2rem] shadow-card p-8 sm:p-10 text-center relative overflow-hidden border border-slate-100 group transition-all duration-500 hover:shadow-2xl">
-            <!-- Decorative Elements -->
             <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary via-orange-400 to-primary"></div>
             <div class="absolute -top-24 -right-24 w-48 h-48 bg-amber-50 rounded-full blur-3xl opacity-50 group-hover:opacity-80 transition-opacity"></div>
             <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-50 rounded-full blur-3xl opacity-50 group-hover:opacity-80 transition-opacity"></div>
@@ -166,7 +157,6 @@
                     <span class="font-mono font-bold text-slate-600 bg-slate-100 hover:bg-primary/20 hover:text-primary px-2 py-1 rounded cursor-pointer select-all transition-colors border border-slate-200" onclick="document.getElementById('searchInput').value='11111111111'">11111111111</span>
                 </div>
                 
-                <!-- Error Message -->
                 <div id="errorMsg" class="hidden mt-6 p-4 bg-red-50 text-red-700 rounded-2xl border border-red-100 flex items-center justify-center gap-2 animate-bounce-short">
                     <i data-lucide="alert-circle" class="w-5 h-5"></i>
                     <span class="font-medium"></span>
@@ -186,14 +176,19 @@
         <!-- RESULT AREA -->
         <div id="resultArea" class="hidden space-y-8 mt-10">
             
+            <!-- Live Indicator -->
+            <div class="flex justify-end -mb-6">
+                 <div class="bg-green-100 text-green-700 text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-2 shadow-sm border border-green-200">
+                    <span class="w-2 h-2 bg-green-500 rounded-full live-dot"></span>
+                    CANLI GÜNCELLENİYOR (15sn)
+                 </div>
+            </div>
+
             <!-- INFO CARD -->
             <div class="bg-white rounded-[2rem] shadow-card border border-slate-100 overflow-hidden">
-                <!-- Card Header -->
                 <div id="statusHeader" class="px-8 py-6 border-b flex items-center justify-between transition-colors duration-500">
                     <div class="flex items-center gap-5">
-                        <div id="statusIconBg" class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner transition-colors duration-500">
-                            <!-- Icon injected via JS -->
-                        </div>
+                        <div id="statusIconBg" class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner transition-colors duration-500"></div>
                         <div>
                             <span class="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-1">Güncel Durum</span>
                             <h2 id="statusText" class="text-2xl font-black tracking-tight leading-none">-</h2>
@@ -205,20 +200,19 @@
                     </div>
                 </div>
                 
-                <!-- Card Body -->
                 <div class="p-8">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-8 gap-x-12">
                         <div class="group">
                             <div class="flex items-center gap-2 mb-2 text-slate-400 text-xs font-bold uppercase tracking-wider">
                                 <i data-lucide="user" class="w-4 h-4 text-primary"></i> Müşteri
                             </div>
-                            <p id="customerName" class="text-lg font-bold text-dark pl-6 border-l-2 border-slate-100 group-hover:border-primary transition-colors">Isim Soyisim</p>
+                            <p id="customerName" class="text-lg font-bold text-dark pl-6 border-l-2 border-slate-100 group-hover:border-primary transition-colors">-</p>
                         </div>
                         <div class="group">
                             <div class="flex items-center gap-2 mb-2 text-slate-400 text-xs font-bold uppercase tracking-wider">
                                 <i data-lucide="package" class="w-4 h-4 text-primary"></i> Ürün
                             </div>
-                            <p id="productName" class="text-lg font-bold text-dark pl-6 border-l-2 border-slate-100 group-hover:border-primary transition-colors">Ürün Adı</p>
+                            <p id="productName" class="text-lg font-bold text-dark pl-6 border-l-2 border-slate-100 group-hover:border-primary transition-colors">-</p>
                         </div>
                         <div class="group">
                             <div class="flex items-center gap-2 mb-2 text-slate-400 text-xs font-bold uppercase tracking-wider">
@@ -245,9 +239,7 @@
                     İşlem Geçmişi
                 </h3>
                 
-                <div class="relative pl-2" id="timelineContainer">
-                    <!-- Timeline items will be injected here via JS -->
-                </div>
+                <div class="relative pl-2" id="timelineContainer"></div>
             </div>
 
         </div>
@@ -261,38 +253,34 @@
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
             <h2 class="text-2xl font-black text-dark mb-6 flex items-center gap-3">
-                <div class="w-10 h-10 bg-primary/20 text-primary rounded-xl flex items-center justify-center">
-                    <i data-lucide="database" class="w-6 h-6"></i>
-                </div>
-                Kurulum Bilgisi
+                <i data-lucide="database" class="w-6 h-6 text-primary"></i> Kurulum Bilgisi
             </h2>
-            <div class="space-y-5 text-sm text-slate-600">
-                <div class="bg-blue-50 text-blue-900 p-4 rounded-2xl border border-blue-100 flex gap-3">
-                    <i data-lucide="info" class="w-5 h-5 flex-shrink-0 text-blue-500"></i>
-                    <p><strong>Not:</strong> Bu dosya şu an <strong>Demo Modu</strong>'nda çalışıyor. Gerçek veriler için kodun içindeki <code>GOOGLE_SHEET_ID</code> alanını doldurmalısınız.</p>
-                </div>
-                <div>
-                    <h3 class="font-bold text-dark mb-3 text-base">Excel Başlıkları (1. Satır):</h3>
-                    <div class="grid grid-cols-2 gap-2 font-mono text-xs">
-                        <span class="bg-slate-100 p-2 rounded-lg border border-slate-200 text-center">TC Kimlik No</span>
-                        <span class="bg-slate-100 p-2 rounded-lg border border-slate-200 text-center">Telefon No</span>
-                        <span class="bg-slate-100 p-2 rounded-lg border border-slate-200 text-center">Müşteri İsmi</span>
-                        <span class="bg-slate-100 p-2 rounded-lg border border-slate-200 text-center">Ürün Adı</span>
-                        <span class="bg-slate-100 p-2 rounded-lg border border-slate-200 text-center">Arıza Durumu</span>
-                        <span class="bg-slate-100 p-2 rounded-lg border border-slate-200 text-center">Geçmiş</span>
-                    </div>
-                </div>
+            <div class="space-y-4 text-sm text-slate-600">
+                 <p class="bg-blue-50 text-blue-900 p-4 rounded-2xl border border-blue-100">
+                    <strong>Sütun Sırası (Önemli):</strong><br>
+                    A Sütunu: TC Kimlik<br>
+                    B Sütunu: Telefon<br>
+                    C Sütunu: Müşteri İsmi<br>
+                    D Sütunu: Ürün Adı<br>
+                    E Sütunu: Arıza Durumu<br>
+                    F Sütunu: Tarih<br>
+                    G Sütunu: Geçmiş
+                 </p>
+                 <p class="text-slate-500">
+                    * Veriler her 15 saniyede bir otomatik güncellenir.
+                 </p>
             </div>
-            <button onclick="document.getElementById('helpModal').classList.add('hidden')" class="w-full bg-dark hover:bg-darker text-white font-bold py-4 rounded-xl mt-8 transition-colors shadow-lg">Anlaşıldı, Kapat</button>
+            <button onclick="document.getElementById('helpModal').classList.add('hidden')" class="w-full bg-dark hover:bg-darker text-white font-bold py-4 rounded-xl mt-6 transition-colors shadow-lg">Kapat</button>
         </div>
     </div>
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        // İkonları yükle
         lucide.createIcons();
 
-        // Veri Gizleme
+        let autoRefreshInterval = null;
+        let lastQuery = '';
+
         const maskData = (str, type) => {
             if (!str) return '';
             if (type === 'phone') return str.length > 7 ? str.substring(0, 4) + ' *** ** ' + str.substring(str.length - 2) : '***';
@@ -300,11 +288,9 @@
             return str;
         };
 
-        // CSV Parser
         const parseCSV = (text) => {
             const lines = text.split('\n').filter(line => line.trim() !== '');
             if (lines.length === 0) return [];
-            const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/['"]+/g, ''));
             
             return lines.slice(1).map(line => {
                 const regex = /(?:,|\n|^)("(?:(?:"")*|[^"]*)*"|[^",\n]*|(?:\n|$))/g;
@@ -313,38 +299,76 @@
                     if (match[1] !== undefined) matches.push(match[1].replace(/['"]+/g, '').trim());
                 }
                 const values = matches.length > 0 ? matches : line.split(',');
-                const obj = {};
-                
-                headers.forEach((header, index) => {
-                    let key = header;
-                    if (header.includes('tc') || header.includes('kimlik')) key = 'tc_no';
-                    else if (header.includes('tel') || header.includes('cep')) key = 'telefon';
-                    else if (header.includes('mteri') || header.includes('isim')) key = 'musteri';
-                    else if (header.includes('ariza') || header.includes('durum')) key = 'ariza_durumu';
-                    else if (header.includes('rün')) key = 'urun_adi';
-                    else if (header.includes('tarih')) key = 'son_islem_tarihi';
-                    else if (header.includes('gecmis')) key = 'islem_gecmisi_raw';
-                    obj[key] = values[index] ? values[index].trim() : '';
-                });
 
-                // Geçmiş Parse Etme
+                const obj = {};
+                obj.tc_no = values[0] || '';         // A
+                obj.telefon = values[1] || '';       // B
+                obj.musteri = values[2] || '';       // C
+                obj.urun_adi = values[3] || '';      // D
+                obj.ariza_durumu = values[4] || '';  // E
+                obj.son_islem_tarihi = values[5] || ''; // F
+                const historyRaw = values[6] || '';  // G
+
                 obj.islem_gecmisi = [];
-                if (obj.islem_gecmisi_raw) {
-                    try {
-                        obj.islem_gecmisi = obj.islem_gecmisi_raw.split(';').map(step => {
-                            const parts = step.split('|');
-                            return { date: parts[0]?.trim(), status: parts[1]?.trim(), note: parts[2]?.trim() };
+                if (historyRaw) {
+                    if (historyRaw.includes('|')) {
+                        const parts = historyRaw.split('|');
+                        obj.islem_gecmisi.push({
+                            date: parts[0] || obj.son_islem_tarihi,
+                            status: parts[1] || parts[0],
+                            note: parts[2] || ''
                         });
-                    } catch(e) {}
+                    } else {
+                        obj.islem_gecmisi.push({
+                            date: obj.son_islem_tarihi || 'Tarih Yok',
+                            status: historyRaw,
+                            note: ''
+                        });
+                    }
                 }
                 return obj;
             });
         };
 
+        // Main Fetch Function (Reused for both initial search and silent updates)
+        async function fetchData(query, isSilent = false) {
+            try {
+                let data = [];
+                if (!GOOGLE_SHEET_ID) {
+                    if (!isSilent) await new Promise(r => setTimeout(r, 1000));
+                    data = DEMO_DATA;
+                } else {
+                    const csvUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_TAB_NAME)}&t=${Date.now()}`; // Add timestamp to prevent caching
+                    const response = await fetch(csvUrl);
+                    if (!response.ok) throw new Error("Excel dosyasına erişilemedi.");
+                    const text = await response.text();
+                    data = parseCSV(text);
+                }
+
+                const cleanQuery = query.replace(/\D/g, '');
+                const found = data.find(item => {
+                    const t = item.tc_no?.replace(/\D/g, '') || '';
+                    const p = item.telefon?.replace(/\D/g, '') || '';
+                    return t.includes(cleanQuery) || p.includes(cleanQuery);
+                });
+
+                return found;
+
+            } catch (err) {
+                console.error("Fetch error:", err);
+                return null;
+            }
+        }
+
+        // Initial Search Triggered by User
         async function searchData(e) {
             e.preventDefault();
             const query = document.getElementById('searchInput').value.trim();
             if(!query) return;
+
+            // Clear existing interval if new search
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            lastQuery = query;
 
             const loadingEl = document.getElementById('loading');
             const resultEl = document.getElementById('resultArea');
@@ -355,55 +379,41 @@
             resultEl.classList.add('hidden');
             errorEl.classList.add('hidden');
 
-            try {
-                let data = [];
-                
-                if (!GOOGLE_SHEET_ID) {
-                    // Demo Mode Simülasyonu
-                    await new Promise(r => setTimeout(r, 1000));
-                    data = DEMO_DATA;
-                } else {
-                    // Google Sheet Fetch
-                    const csvUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_TAB_NAME)}`;
-                    const response = await fetch(csvUrl);
-                    if (!response.ok) throw new Error("Excel dosyasına erişilemedi. ID veya Sekme ismini kontrol edin.");
-                    const text = await response.text();
-                    data = parseCSV(text);
-                }
+            const result = await fetchData(query, false);
+            
+            loadingEl.classList.add('hidden');
 
-                // Arama
-                const cleanQuery = query.replace(/\D/g, '');
-                const found = data.find(item => {
-                    const t = item.tc_no?.replace(/\D/g, '') || '';
-                    const p = item.telefon?.replace(/\D/g, '') || '';
-                    return t.includes(cleanQuery) || p.includes(cleanQuery);
-                });
+            if (result) {
+                renderResult(result);
+                resultEl.classList.remove('hidden');
+                setTimeout(() => {
+                    resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
 
-                if (found) {
-                    renderResult(found);
-                    resultEl.classList.remove('hidden');
-                    // Scroll to result
-                    setTimeout(() => {
-                        resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }, 100);
-                } else {
-                    errorText.textContent = "Bu bilgilere ait bir servis kaydı bulunamadı.";
-                    errorEl.classList.remove('hidden');
-                }
+                // Start Auto Refresh Interval (15 Seconds)
+                autoRefreshInterval = setInterval(() => {
+                    refreshDataSilent(lastQuery);
+                }, 15000);
 
-            } catch (err) {
-                console.error(err);
-                errorText.textContent = "Hata: " + err.message;
+            } else {
+                errorText.textContent = "Kayıt bulunamadı.";
                 errorEl.classList.remove('hidden');
-            } finally {
-                loadingEl.classList.add('hidden');
+            }
+        }
+
+        // Silent Background Update
+        async function refreshDataSilent(query) {
+            console.log("Auto-refreshing data...");
+            const result = await fetchData(query, true);
+            if (result) {
+                renderResult(result);
             }
         }
 
         function renderResult(data) {
-            const isCompleted = data.ariza_durumu.toLowerCase().includes('tamam') || data.ariza_durumu.toLowerCase().includes('teslim');
+            const rawStatus = data.ariza_durumu || '';
+            const isCompleted = rawStatus.toLowerCase().includes('tamam') || rawStatus.toLowerCase().includes('teslim');
             
-            // Header Renkleri
             const headerEl = document.getElementById('statusHeader');
             const iconBgEl = document.getElementById('statusIconBg');
             
@@ -416,37 +426,32 @@
                 iconBgEl.className = "w-14 h-14 rounded-2xl flex items-center justify-center bg-primary text-dark shadow-lg shadow-amber-200 transform scale-105";
                 iconBgEl.innerHTML = '<i data-lucide="clock" class="w-7 h-7"></i>';
             }
-            lucide.createIcons(); // Re-render icons
+            lucide.createIcons();
 
-            // Metinler
-            document.getElementById('statusText').textContent = data.ariza_durumu;
+            document.getElementById('statusText').textContent = data.ariza_durumu || 'Belirtilmedi';
             document.getElementById('statusText').className = isCompleted ? "text-2xl font-black text-green-700 tracking-tight" : "text-2xl font-black text-dark tracking-tight";
             
             document.getElementById('lastDate').textContent = data.son_islem_tarihi || '-';
-            document.getElementById('customerName').textContent = data.musteri;
-            document.getElementById('productName').textContent = data.urun_adi;
+            document.getElementById('customerName').textContent = data.musteri || '-';
+            document.getElementById('productName').textContent = data.urun_adi || '-';
             document.getElementById('phoneNum').textContent = maskData(data.telefon, 'phone');
             document.getElementById('tcNum').textContent = maskData(data.tc_no, 'tc');
 
-            // Timeline
             const tlContainer = document.getElementById('timelineContainer');
-            tlContainer.innerHTML = '<div class="timeline-line"></div>'; // Reset ve çizgi ekle
+            tlContainer.innerHTML = '<div class="timeline-line"></div>';
 
             if (data.islem_gecmisi && data.islem_gecmisi.length > 0) {
                 data.islem_gecmisi.forEach((step, index) => {
                     const isFirst = index === 0;
                     const html = `
                         <div class="relative flex gap-6 group mb-10 last:mb-0">
-                            <!-- Dot -->
                             <div class="relative z-10 w-6 h-6 rounded-full border-4 transition-all duration-300
                                 ${isFirst ? 'bg-primary border-white ring-4 ring-amber-50 shadow-lg scale-110' : 'bg-white border-slate-300 group-hover:border-primary'}">
                             </div>
-                            
-                            <!-- Content -->
                             <div class="flex-1 -mt-2 p-6 rounded-3xl border transition-all duration-300 ${isFirst ? 'bg-gradient-to-br from-amber-50 to-white border-amber-100 shadow-md' : 'bg-white border-slate-100 hover:shadow-sm'}">
                                 <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
-                                    <h4 class="text-lg font-bold ${isFirst ? 'text-dark' : 'text-slate-700'}">${step.status}</h4>
-                                    <span class="text-xs font-bold text-slate-500 bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-slate-200 self-start sm:self-auto shadow-sm">${step.date}</span>
+                                    <h4 class="text-lg font-bold ${isFirst ? 'text-dark' : 'text-slate-700'}">${step.status || 'İşlem'}</h4>
+                                    <span class="text-xs font-bold text-slate-500 bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-slate-200 self-start sm:self-auto shadow-sm">${step.date || ''}</span>
                                 </div>
                                 <p class="text-sm text-slate-600 leading-relaxed font-medium">${step.note || ''}</p>
                             </div>
