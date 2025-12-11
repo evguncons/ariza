@@ -26,19 +26,25 @@
         }
     </script>
     <style>
-        /* SCROLL FIX & LAYOUT */
-        html {
-            scroll-behavior: smooth;
-        }
-        body {
-            min-height: 100vh;
+        /* SCROLL FIX - EN GARANTİ YÖNTEM */
+        html, body {
             margin: 0;
             padding: 0;
+            width: 100%;
+            min-height: 100%;
+            /* Dikey scrollu zorla aç, yatay taşmayı engelle */
+            overflow-y: auto !important; 
+            overflow-x: hidden !important;
+            /* Mobil cihazlarda akıcı kaydırma (iOS fix) */
+            -webkit-overflow-scrolling: touch;
             background-color: #f8fafc;
-            /* Yatay taşmayı engelle, dikey scroll'u serbest bırak */
-            overflow-x: hidden;
+        }
+        
+        /* İçerik taşsa bile scrollbarın görünür olmasını sağla */
+        body {
             position: relative;
         }
+
         .timeline-line { position: absolute; left: 23px; top: 10px; bottom: 10px; width: 2px; background: #e2e8f0; z-index: 0; }
     </style>
 </head>
