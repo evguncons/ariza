@@ -69,8 +69,11 @@
     <!-- --- AYARLAR VE VERİ --- -->
     <script>
         // Apps Script URL'si
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzxbGL66MdJNMqfvDsqp6An-tkGWIB6irlq8dI6-9cH6s2Ptsz0eq5dWCkvB_b26ywl/exec"; 
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYvTzr971zNlUL7BnoK_nlCUn7len3c-SRI7dy_s4auFapski5BaXu3RefAK_P-PLn/exec"; 
         
+        // WhatsApp Hattı (90 ile başlar)
+        const WHATSAPP_NUMBER = "905387940389";
+
         // Demo Verileri (Bağlantı hatasında gösterilecek örnek yapı)
         const DEMO_DATA = [
             {
@@ -165,6 +168,12 @@
 
     </main>
 
+    <!-- FLOATING WHATSAPP BUTTON (Hidden by default) -->
+    <a id="whatsappFloat" href="#" target="_blank" class="hidden fixed bottom-6 right-6 z-50 bg-[#25D366] hover:bg-[#128C7E] text-white p-4 rounded-full shadow-lg shadow-green-900/20 transition-all hover:scale-110 flex items-center gap-2 group animate-in fade-in slide-in-from-bottom-10">
+        <i data-lucide="message-circle" class="w-8 h-8 fill-current"></i>
+        <span class="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap font-bold text-lg">WhatsApp Destek</span>
+    </a>
+
     <!-- JAVASCRIPT LOGIC -->
     <script>
         lucide.createIcons();
@@ -176,6 +185,7 @@
         const maskData = (str, type) => {
             if (!str) return '';
             if (type === 'phone') return str.length > 7 ? str.substring(0, 4) + ' *** ** ' + str.substring(str.length - 2) : '***';
+            if (type === 'tc') return str.length > 5 ? str.substring(0, 3) + '*****' + str.substring(str.length - 3) : '*****';
             return str;
         };
 
@@ -231,10 +241,12 @@
             const resultEl = document.getElementById('resultArea');
             const errorEl = document.getElementById('errorMsg');
             const errorText = errorEl.querySelector('span');
+            const floatBtn = document.getElementById('whatsappFloat');
 
             loadingEl.classList.remove('hidden');
             resultEl.classList.add('hidden');
             errorEl.classList.add('hidden');
+            floatBtn.classList.add('hidden'); // Aramada gizle
             resultEl.innerHTML = ''; 
 
             try {
@@ -274,8 +286,20 @@
         // --- RENDER RESULTS ---
         function renderResults(results) {
             const resultContainer = document.getElementById('resultArea');
+            const floatBtn = document.getElementById('whatsappFloat');
             
-            // 1. MEVCUT AÇIK DETAYLARI SAKLA (STATE PRESERVATION)
+            // İlk kayıttan müşteri bilgisini al
+            const customer = results[0];
+
+            // 1. WhatsApp Butonunu Yapılandır ve Göster
+            let waMsg = "Merhaba, teknik servis süreçlerim hakkında bilgi almak istiyorum.";
+            if (results.length === 1) {
+                waMsg = `Merhaba, ${results[0].urun_adi} ürünüm ile ilgili bilgi almak istiyorum.`;
+            }
+            floatBtn.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMsg)}`;
+            floatBtn.classList.remove('hidden');
+            
+            // 2. Açık Kartları Hatırla
             const openDetailsIndexes = [];
             const currentDetails = resultContainer.querySelectorAll('[id^="details-"]');
             currentDetails.forEach(el => {
@@ -284,9 +308,6 @@
                     openDetailsIndexes.push(idParts[1]); // Açık olan indeksleri kaydet
                 }
             });
-
-            // İlk kayıttan müşteri bilgisini al
-            const customer = results[0];
             
             let htmlContent = `
                 <!-- Top Control Bar -->
@@ -380,7 +401,7 @@
             resultContainer.innerHTML = htmlContent;
             lucide.createIcons();
 
-            // 2. ÖNCEDEN AÇIK OLAN DETAYLARI TEKRAR AÇ
+            // 3. Önceden açık olan detayları tekrar aç
             openDetailsIndexes.forEach(idx => {
                 const detail = document.getElementById(`details-${idx}`);
                 const chevron = document.getElementById(`chevron-${idx}`);
