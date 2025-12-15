@@ -69,7 +69,7 @@
     <!-- --- AYARLAR VE VERİ --- -->
     <script>
         // Apps Script URL'si
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyE5tGTr3MyP4JmGNX_Ocom6HnG2f-dVpUXy0Ga2uVd2BC8Tf44Am2uf6qXEqmZ3uU8/exec"; 
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYvTzr971zNlUL7BnoK_nlCUn7len3c-SRI7dy_s4auFapski5BaXu3RefAK_P-PLn/exec"; 
         
         // WhatsApp Hattı (90 ile başlar)
         const WHATSAPP_NUMBER = "905387940389";
@@ -339,10 +339,34 @@
             results.forEach((data, index) => {
                 const rawStatus = data.ariza_durumu || '';
                 const isCompleted = rawStatus.toLowerCase().includes('tamam') || rawStatus.toLowerCase().includes('teslim');
-                const statusColorClass = isCompleted ? 'text-green-700' : 'text-dark';
+                
+                // Durum rengi ve yazı tipi güncellendi
+                const statusColorClass = isCompleted ? 'text-green-700' : 'text-slate-800'; 
                 const headerBgClass = isCompleted ? 'bg-green-50/50 border-green-100' : 'bg-amber-50/50 border-amber-100';
                 const iconColorClass = isCompleted ? 'bg-green-500 text-white shadow-green-200' : 'bg-primary text-dark shadow-amber-200';
                 const iconSvg = isCompleted ? '<i data-lucide="check-circle-2" class="w-6 h-6"></i>' : '<i data-lucide="package" class="w-6 h-6"></i>';
+
+                // PLANLANAN TARİH GÖSTERİM MANTIĞI
+                let showPlan = false;
+                let planlananTarihHTML = '';
+                
+                if (data.ariza_durumu && data.ariza_durumu.toLowerCase().includes('parça geldi')) {
+                    showPlan = true;
+                    planlananTarihHTML = `
+                        <div class="flex items-start gap-4">
+                            <div class="p-3 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">
+                                <i data-lucide="calendar-clock" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">Planlanan Servis Tarihi</span>
+                                <p class="text-lg font-bold text-slate-800">Tahmini 15 gün içerisinde</p>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Chevron ikonunu sadece içerik varsa göster (Opsiyonel UX iyileştirmesi)
+                const chevronVisibility = showPlan ? '' : 'invisible';
 
                 htmlContent += `
                     <div class="bg-white rounded-[2rem] shadow-card border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500" style="animation-delay: ${index * 150}ms">
@@ -354,44 +378,30 @@
                                     ${iconSvg}
                                 </div>
                                 <div>
-                                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">Ürün & Durum</span>
-                                    <h3 class="text-xl font-black tracking-tight leading-none text-slate-900">${data.urun_adi}</h3>
-                                    <p class="text-lg font-bold ${statusColorClass} mt-1">${data.ariza_durumu}</p>
+                                    <!-- SOL TARAFTA KAYIT TARİHİ VE DURUM -->
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">Kayıt Tarihi & Durum</span>
+                                    <h3 class="text-sm font-bold text-slate-500 leading-tight mb-1">${data.ariza_tarihi || '-'}</h3>
+                                    <!-- DURUM YAZISI UFALTILDI (text-xl -> text-lg) -->
+                                    <p class="text-lg font-extrabold ${statusColorClass} tracking-tight">${data.ariza_durumu}</p>
                                 </div>
                             </div>
                             
                             <div class="flex items-center justify-between md:justify-end gap-8 w-full md:w-auto mt-2 md:mt-0">
                                 <div class="text-left md:text-right">
-                                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Kayıt Tarihi</span>
-                                    <p class="font-bold text-slate-700 font-mono text-sm">${data.ariza_tarihi || '-'}</p>
-                                </div>
-                                <div class="text-left md:text-right">
-                                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Randevu</span>
-                                    <p class="font-bold text-blue-600 font-mono text-sm">${data.randevu_durumu || '-'}</p>
+                                    <!-- SAĞ TARAFTA ÜRÜN ADI -->
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Ürün</span>
+                                    <p class="text-lg font-black text-slate-900">${data.urun_adi || 'Belirtilmedi'}</p>
                                 </div>
                                 <!-- Chevron Icon -->
-                                <div id="chevron-${index}" class="text-slate-400 transition-transform duration-300">
+                                <div id="chevron-${index}" class="text-slate-400 transition-transform duration-300 ${chevronVisibility}">
                                     <i data-lucide="chevron-down" class="w-6 h-6"></i>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Detaylar (Açılır Kapanır) -->
+                        <!-- Detaylar (Açılır Kapanır) - SADECE PLANLANAN TARİH VARSA GÖSTERİLİR -->
                         <div id="details-${index}" class="hidden bg-white relative border-t border-slate-100">
-                            <div class="p-8">
-                                
-                                <!-- Planlanan Tarih -->
-                                <div class="flex items-start gap-4">
-                                    <div class="p-3 bg-blue-50 text-blue-600 rounded-xl border border-blue-100">
-                                        <i data-lucide="calendar-clock" class="w-6 h-6"></i>
-                                    </div>
-                                    <div>
-                                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">Planlanan Servis Tarihi</span>
-                                        <p class="text-lg font-bold text-slate-800">${data.planlanan_tarih || 'Planlanmadı'}</p>
-                                    </div>
-                                </div>
-
-                            </div>
+                            ${showPlan ? `<div class="p-8">${planlananTarihHTML}</div>` : ''}
                         </div>
                     </div>
                 `;
