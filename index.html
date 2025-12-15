@@ -126,7 +126,7 @@
                     Arıza Durum <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">Sorgulama</span>
                 </h1>
                 <p class="text-slate-500 mb-10 max-w-lg mx-auto text-base sm:text-lg leading-relaxed">
-                    Cihazınızın servis sürecini anlık olarak takip etmek için lütfen <strong>telefon numaranızı</strong> giriniz.
+                    Ürününüzün servis sürecini anlık olarak takip etmek için lütfen <strong>telefon numaranızı</strong> giriniz.
                 </p>
 
                 <!-- INPUT AREA -->
@@ -298,16 +298,6 @@
             floatBtn.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMsg)}`;
             floatBtn.classList.remove('hidden');
             
-            // 2. Açık Kartları Hatırla
-            const openDetailsIndexes = [];
-            const currentDetails = resultContainer.querySelectorAll('[id^="details-"]');
-            currentDetails.forEach(el => {
-                if (!el.classList.contains('hidden')) {
-                    const idParts = el.id.split('-');
-                    openDetailsIndexes.push(idParts[1]); // Açık olan indeksleri kaydet
-                }
-            });
-            
             let htmlContent = `
                 <!-- Top Control Bar -->
                 <div class="flex justify-end mb-6">
@@ -352,24 +342,23 @@
                 if (data.ariza_durumu && data.ariza_durumu.toLowerCase().includes('parça geldi')) {
                     showPlan = true;
                     planlananTarihHTML = `
-                        <div class="flex items-center gap-3 bg-blue-50 text-blue-700 px-4 py-3 rounded-xl border border-blue-100">
-                            <i data-lucide="clock" class="w-5 h-5 flex-shrink-0"></i>
-                            <div>
-                                <p class="text-xs font-bold opacity-80 uppercase">Tahmini Planlama</p>
-                                <p class="text-sm font-bold">15 gün içerisinde teslimat planlanmaktadır.</p>
+                        <div class="p-5 border-t border-slate-100 bg-slate-50/50">
+                            <div class="flex items-center gap-3 bg-blue-50 text-blue-700 px-4 py-3 rounded-xl border border-blue-100">
+                                <i data-lucide="clock" class="w-5 h-5 flex-shrink-0"></i>
+                                <div>
+                                    <p class="text-xs font-bold opacity-80 uppercase">Tahmini Çözüm Süreci</p>
+                                    <p class="text-sm font-bold">15 gün içerisinde teslimat planlanmaktadır.</p>
+                                </div>
                             </div>
                         </div>
                     `;
                 }
 
-                // Chevron ikonunu sadece içerik varsa göster
-                const chevronVisibility = showPlan ? '' : 'invisible';
-
                 htmlContent += `
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-4 hover:shadow-md transition-shadow duration-300">
                         
-                        <!-- Header (SADELEŞTİRİLDİ) -->
-                        <div onclick="toggleDetails(${index})" class="cursor-pointer p-5 flex flex-col sm:flex-row sm:items-center gap-4 bg-white hover:bg-slate-50 transition-colors relative">
+                        <!-- Header (SADELEŞTİRİLDİ) - TIKLANABİLİR DEĞİL -->
+                        <div class="p-5 flex flex-col sm:flex-row sm:items-center gap-4 bg-white relative">
                             
                             <!-- Icon & Main Info (Sol Taraf) -->
                             <div class="flex items-center gap-4 flex-1">
@@ -393,47 +382,17 @@
                                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Durum</span>
                                     <p class="text-lg font-extrabold ${statusColorClass} tracking-tight">${data.ariza_durumu}</p>
                                 </div>
-                                <!-- Chevron Icon -->
-                                <div id="chevron-${index}" class="text-slate-400 transition-transform duration-300 ${chevronVisibility}">
-                                    <i data-lucide="chevron-down" class="w-5 h-5"></i>
-                                </div>
                             </div>
                         </div>
 
-                        <!-- Detaylar (Sadece Plan Varsa Görünür) -->
-                        <div id="details-${index}" class="hidden bg-slate-50/50 border-t border-slate-100">
-                            ${showPlan ? `<div class="p-5">${planlananTarihHTML}</div>` : ''}
-                        </div>
+                        <!-- Bilgi (Sadece Plan Varsa Görünür, Altına eklenir) -->
+                        ${showPlan ? planlananTarihHTML : ''}
                     </div>
                 `;
             });
 
             resultContainer.innerHTML = htmlContent;
             lucide.createIcons();
-
-            // 3. Önceden açık olan detayları tekrar aç
-            openDetailsIndexes.forEach(idx => {
-                const detail = document.getElementById(`details-${idx}`);
-                const chevron = document.getElementById(`chevron-${idx}`);
-                if (detail) detail.classList.remove('hidden');
-                if (chevron) chevron.classList.add('rotate-180');
-            });
-        }
-
-        function toggleDetails(index) {
-            const content = document.getElementById(`details-${index}`);
-            const chevron = document.getElementById(`chevron-${index}`);
-            
-            // Eğer içerik boşsa açma
-            if (!content.innerHTML.trim()) return;
-
-            if (content.classList.contains('hidden')) {
-                content.classList.remove('hidden');
-                chevron.classList.add('rotate-180');
-            } else {
-                content.classList.add('hidden');
-                chevron.classList.remove('rotate-180');
-            }
         }
     </script>
 </body>
