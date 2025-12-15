@@ -260,10 +260,16 @@
                 }
 
                 const cleanQuery = query.replace(/\D/g, '');
+                
+                // --- GÜNCELLEME: TAM EŞLEŞME (EXACT MATCH) KONTROLÜ ---
                 const matches = data.filter(item => {
                     const t = item.tc_no?.replace(/\D/g, '') || '';
                     const p = item.telefon?.replace(/\D/g, '') || '';
-                    return t.includes(cleanQuery) || p.includes(cleanQuery);
+                    
+                    // includes() yerine === kullanarak tam eşleşme sağlıyoruz
+                    // Bu sayede "3" yazınca içinde 3 geçen herkes gelmez.
+                    // Sadece tam TC veya tam Telefon girilirse sonuç döner.
+                    return t === cleanQuery || p === cleanQuery;
                 });
 
                 return matches;
