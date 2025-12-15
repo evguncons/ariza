@@ -69,7 +69,7 @@
     <!-- --- AYARLAR VE VERİ --- -->
     <script>
         // Apps Script URL'si
-        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYvTzr971zNlUL7BnoK_nlCUn7len3c-SRI7dy_s4auFapski5BaXu3RefAK_P-PLn/exec"; 
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyE5tGTr3MyP4JmGNX_Ocom6HnG2f-dVpUXy0Ga2uVd2BC8Tf44Am2uf6qXEqmZ3uU8/exec"; 
         
         // WhatsApp Hattı (90 ile başlar)
         const WHATSAPP_NUMBER = "905387940389";
@@ -185,7 +185,6 @@
         const maskData = (str, type) => {
             if (!str) return '';
             if (type === 'phone') return str.length > 7 ? str.substring(0, 4) + ' *** ** ' + str.substring(str.length - 2) : '***';
-            if (type === 'tc') return str.length > 5 ? str.substring(0, 3) + '*****' + str.substring(str.length - 3) : '*****';
             return str;
         };
 
