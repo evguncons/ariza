@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teknik Servis Takip Portalı</title>
-    <!-- Tailwind CSS (Tasarım Kütüphanesi) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Ikonlar -->
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
@@ -17,193 +17,202 @@
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        primary: '#fbbf24', // Amber-400
-                        primaryHover: '#f59e0b', // Amber-500
-                        dark: '#0f172a', // Slate-900
-                        darker: '#020617', // Slate-950
+                        primary: '#d97706', // Amber-600 (Daha koyu gold)
+                        primaryLight: '#f59e0b', // Amber-500
+                        secondary: '#0f172a', // Slate-900
+                        surface: '#ffffff',
                     },
                     boxShadow: {
-                        'glow': '0 0 20px rgba(251, 191, 36, 0.3)',
-                        'card': '0 10px 40px -10px rgba(0,0,0,0.08)'
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                        'glow': '0 0 15px rgba(245, 158, 11, 0.3)',
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
                     }
                 }
             }
         }
     </script>
     <style>
-        /* SCROLL FIX */
-        html, body {
+        /* Modern Background */
+        body {
             margin: 0;
             padding: 0;
             width: 100%;
-            min-height: 100%;
-            overflow-y: auto !important; 
-            overflow-x: hidden !important;
-            -webkit-overflow-scrolling: touch;
-            background-color: #f8fafc;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-        }
-        
-        body {
-            background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
-            background-size: 24px 24px;
-            position: relative;
-        }
-
-        .input-transition {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: #f8fafc;
+            /* Mesh Gradient Effect */
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(251, 191, 36, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(15, 23, 42, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(251, 191, 36, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Pulse animation for live badge */
-        @keyframes pulse-green {
+        /* Input Focus Effects */
+        .input-focus-ring:focus-within {
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15);
+            border-color: #f59e0b;
+        }
+
+        /* Live Indicator Pulse */
+        @keyframes pulse-dot {
             0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
             70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
             100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
         }
         .live-dot {
-            animation: pulse-green 2s infinite;
+            animation: pulse-dot 2s infinite;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
         }
     </style>
 </head>
-<body class="antialiased text-slate-800">
+<body class="text-slate-800">
 
-    <!-- --- AYARLAR VE VERİ --- -->
+    <!-- --- AYARLAR --- -->
     <script>
-        // Apps Script URL'si
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYvTzr971zNlUL7BnoK_nlCUn7len3c-SRI7dy_s4auFapski5BaXu3RefAK_P-PLn/exec"; 
-        
-        // WhatsApp Hattı (90 ile başlar)
         const WHATSAPP_NUMBER = "905387940389";
-
-        // Demo Verileri (Bağlantı hatasında gösterilecek örnek yapı)
-        const DEMO_DATA = [
-            {
-                tc_no: "",
-                telefon: "5320000000",
-                musteri: "Örnek Müşteri",
-                urun_adi: "Örnek Ürün",
-                ariza_durumu: "İşlemde",
-                ariza_tarihi: "01.01.2025",
-                planlanan_tarih: "05.01.2025",
-                randevu_durumu: "Planlanıyor",
-                tespitler: ""
-            }
-        ];
+        const DEMO_DATA = [{ tc_no: "", telefon: "5320000000", musteri: "Örnek Müşteri", urun_adi: "Örnek Ürün", ariza_durumu: "İşlemde", ariza_tarihi: "01.01.2025", planlanan_tarih: "05.01.2025", randevu_durumu: "Planlanıyor", tespitler: "" }];
     </script>
 
     <!-- HEADER -->
-    <header class="bg-dark/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-white/10">
-        <div class="max-w-4xl mx-auto px-4 h-20 flex items-center justify-center">
-            <div class="flex items-center gap-4">
-                <img src="https://i.ibb.co/tw11TJ4M/Hedeflogo-arkapembe.png" alt="Logo" class="h-10 w-auto object-contain drop-shadow-lg filter brightness-110">
-                <div class="flex flex-col border-l border-white/20 pl-4">
-                    <span class="font-black text-lg text-white leading-none tracking-tight">TEKNİK SERVİS</span>
-                    <span class="text-[10px] text-primary font-bold tracking-[0.2em] mt-1 uppercase opacity-90">Müşteri Portalı</span>
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200/60 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-slate-900 p-1.5 rounded-lg">
+                    <img src="https://i.ibb.co/tw11TJ4M/Hedeflogo-arkapembe.png" alt="Logo" class="h-8 w-auto object-contain brightness-125">
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-bold text-lg text-slate-900 leading-none tracking-tight">TEKNİK SERVİS</span>
+                    <span class="text-[10px] font-bold text-primary tracking-widest mt-0.5 uppercase">Müşteri Portalı</span>
                 </div>
             </div>
+            <!-- Sağ taraf boş veya ek linkler olabilir -->
         </div>
     </header>
 
     <!-- MAIN CONTENT -->
-    <main class="max-w-3xl mx-auto px-4 py-12 pb-24 flex-grow">
+    <main class="flex-grow flex flex-col items-center justify-start pt-12 pb-24 px-4 w-full max-w-4xl mx-auto">
         
-        <!-- SEARCH BOX -->
-        <div class="bg-white rounded-[2rem] shadow-card p-8 sm:p-10 text-center relative overflow-hidden border border-slate-100 group transition-all duration-500 hover:shadow-2xl">
-            <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary via-orange-400 to-primary"></div>
-            <div class="absolute -top-24 -right-24 w-48 h-48 bg-amber-50 rounded-full blur-3xl opacity-50 group-hover:opacity-80 transition-opacity"></div>
-            <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-50 rounded-full blur-3xl opacity-50 group-hover:opacity-80 transition-opacity"></div>
+        <!-- SEARCH CARD -->
+        <div class="w-full bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl shadow-slate-200/50 p-8 sm:p-10 border border-white relative overflow-hidden group">
+            
+            <!-- Dekoratif Arkaplan -->
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary to-amber-300"></div>
+            <div class="absolute -right-10 -top-10 w-40 h-40 bg-amber-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
 
-            <div class="relative z-10">
-                <div class="flex justify-center mb-6">
-                    <img src="https://i.ibb.co/tw11TJ4M/Hedeflogo-arkapembe.png" alt="Hedef AVM" class="h-16 w-auto object-contain drop-shadow-md">
-                </div>
-
+            <div class="relative z-10 text-center">
+                
                 <div class="inline-flex items-center gap-2 bg-slate-50 text-slate-600 px-4 py-1.5 rounded-full text-xs font-bold mb-6 border border-slate-200 shadow-sm">
-                    <i data-lucide="wrench" class="w-3 h-3 text-primary"></i> 
-                    <span class="tracking-wide">SATIŞ SONRASI HİZMETLER</span>
+                    <i data-lucide="shield-check" class="w-3.5 h-3.5 text-primary"></i> 
+                    <span class="tracking-wide uppercase">Güvenli Sorgulama</span>
                 </div>
 
-                <h1 class="text-3xl sm:text-4xl font-black text-dark mb-4 tracking-tight leading-tight">
-                    Arıza Durum <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">Sorgulama</span>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-4 tracking-tight">
+                    Arıza Durum <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-amber-500">Sorgulama</span>
                 </h1>
-                <p class="text-slate-500 mb-10 max-w-lg mx-auto text-base sm:text-lg leading-relaxed">
-                    Ürününüzün servis sürecini anlık olarak takip etmek için lütfen <strong>telefon numaranızı</strong> giriniz.
+                
+                <p class="text-slate-500 mb-8 max-w-lg mx-auto text-base leading-relaxed">
+                    Ürününüzün güncel durumunu, servis aşamalarını ve tahmini teslimat tarihini öğrenmek için numaranızı giriniz.
                 </p>
 
-                <!-- INPUT AREA -->
-                <form onsubmit="searchData(event)" class="relative max-w-xl mx-auto flex flex-col sm:flex-row gap-4">
-                    <div class="relative flex-1 group/input">
-                        <div class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/input:text-primary transition-colors">
-                            <i data-lucide="phone" class="w-5 h-5"></i>
+                <!-- INPUT FORM -->
+                <form onsubmit="searchData(event)" class="relative max-w-lg mx-auto">
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <div class="relative flex-1 group input-focus-ring rounded-2xl transition-all duration-300 bg-slate-50 border border-slate-200">
+                            <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                                <i data-lucide="smartphone" class="w-5 h-5"></i>
+                            </div>
+                            <input type="tel" id="searchInput" placeholder="(5XX) XXX XX XX" maxlength="15"
+                                class="w-full h-14 pl-12 pr-10 rounded-2xl bg-transparent outline-none font-semibold text-slate-800 placeholder:text-slate-400 text-lg tracking-wide"
+                                oninput="formatPhoneNumber(this)">
+                            
+                            <button type="button" id="clearBtn" onclick="clearInput()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors p-1">
+                                <i data-lucide="x-circle" class="w-5 h-5 fill-current"></i>
+                            </button>
                         </div>
-                        <input type="tel" id="searchInput" placeholder="(5XX) XXX XX XX" maxlength="15"
-                            class="input-transition w-full h-14 pl-12 pr-12 rounded-2xl border-2 border-slate-100 bg-slate-50/50 focus:bg-white focus:border-primary focus:ring-4 focus:ring-amber-50 outline-none font-semibold text-dark placeholder:text-slate-400 shadow-sm text-lg tracking-wide"
-                            oninput="formatPhoneNumber(this)">
                         
-                        <!-- Temizle Butonu -->
-                        <button type="button" id="clearBtn" onclick="clearInput()" class="hidden absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors p-1">
-                            <i data-lucide="x-circle" class="w-5 h-5 fill-current"></i>
+                        <button type="submit" id="searchBtn"
+                            class="h-14 sm:w-auto px-8 bg-gradient-to-r from-slate-900 to-slate-800 hover:from-primary hover:to-primaryLight text-white rounded-2xl font-bold tracking-wide transition-all duration-300 shadow-lg hover:shadow-amber-500/30 active:scale-[0.98] flex items-center justify-center gap-2">
+                            <span>SORGULA</span>
+                            <i data-lucide="arrow-right" class="w-5 h-5"></i>
                         </button>
                     </div>
-                    <button type="submit" id="searchBtn"
-                        class="h-14 bg-dark hover:bg-darker text-white px-8 rounded-2xl font-bold tracking-wide transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 sm:w-auto w-full group/btn">
-                        <span>SORGULA</span>
-                        <i data-lucide="arrow-right" class="w-4 h-4 group-hover/btn:translate-x-1 transition-transform"></i>
-                    </button>
                 </form>
                 
-                <div id="errorMsg" class="hidden mt-6 p-4 bg-red-50 text-red-700 rounded-2xl border border-red-100 flex items-center justify-center gap-2 animate-bounce-short">
+                <div id="errorMsg" class="hidden mt-6 inline-flex items-center gap-2 px-4 py-3 bg-red-50 text-red-600 rounded-xl border border-red-100 text-sm font-medium animate-fade-in-up">
                     <i data-lucide="alert-circle" class="w-5 h-5 flex-shrink-0"></i>
-                    <span class="font-medium text-sm"></span>
+                    <span></span>
                 </div>
             </div>
         </div>
 
-        <!-- LOADING -->
-        <div id="loading" class="hidden py-16 text-center">
+        <!-- LOADING STATE -->
+        <div id="loading" class="hidden py-20 text-center w-full animate-fade-in-up">
             <div class="relative w-16 h-16 mx-auto mb-6">
-                <div class="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-slate-200 rounded-full"></div>
                 <div class="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
             </div>
-            <p class="text-slate-500 font-medium animate-pulse">Veriler kontrol ediliyor...</p>
+            <p class="text-slate-500 font-medium text-lg">Kayıtlar taranıyor...</p>
         </div>
 
-        <!-- EMPTY STATE (Başlangıçta Görünür) -->
-        <div id="emptyState" class="py-12 text-center opacity-60">
-            <div class="inline-flex items-center justify-center w-20 h-20 bg-slate-100 rounded-full mb-4">
-                <i data-lucide="search-check" class="w-10 h-10 text-slate-300"></i>
+        <!-- EMPTY STATE -->
+        <div id="emptyState" class="py-16 text-center opacity-50 select-none">
+            <div class="inline-flex items-center justify-center w-24 h-24 bg-white rounded-full shadow-soft mb-6">
+                <i data-lucide="search" class="w-10 h-10 text-slate-300"></i>
             </div>
-            <p class="text-slate-400 font-medium text-sm">Sorgulama yapmak için numaranızı girin.</p>
+            <p class="text-slate-400 font-medium">Sorgulama yapmak için telefon numaranızı girin.</p>
         </div>
 
-        <!-- RESULT AREA -->
-        <div id="resultArea" class="hidden space-y-8 mt-4">
-            <!-- Content injected via JS -->
+        <!-- RESULTS AREA -->
+        <div id="resultArea" class="hidden w-full mt-8 space-y-6">
+            <!-- JS will inject content here -->
         </div>
 
     </main>
 
     <!-- FOOTER -->
-    <footer class="bg-white border-t border-slate-200 py-8 mt-auto">
-        <div class="max-w-4xl mx-auto px-4 text-center">
-            <p class="text-slate-400 text-xs font-medium mb-2">
-                &copy; <span id="year"></span> Hedef AVM - Tüm Hakları Saklıdır.
+    <footer class="bg-white border-t border-slate-100 py-8 mt-auto">
+        <div class="max-w-5xl mx-auto px-4 text-center">
+            <p class="text-slate-400 text-xs font-medium mb-3">
+                &copy; <span id="year"></span> Hedef AVM - Müşteri Hizmetleri
             </p>
-            <div class="flex justify-center gap-4 text-xs text-slate-300">
-                <span class="hover:text-primary cursor-pointer transition-colors">Gizlilik Politikası</span>
-                <span>•</span>
-                <span class="hover:text-primary cursor-pointer transition-colors">Kullanım Koşulları</span>
-                <span>•</span>
-                <span class="hover:text-primary cursor-pointer transition-colors">İletişim</span>
+            <div class="flex justify-center gap-6 text-xs text-slate-400 font-medium">
+                <a href="#" class="hover:text-primary transition-colors">Gizlilik</a>
+                <a href="#" class="hover:text-primary transition-colors">Kullanım Şartları</a>
+                <a href="#" class="hover:text-primary transition-colors">İletişim</a>
             </div>
         </div>
     </footer>
 
-    <!-- FLOATING WHATSAPP BUTTON (Hidden by default) -->
-    <a id="whatsappFloat" href="#" target="_blank" class="hidden fixed bottom-6 right-6 z-50 bg-[#25D366] hover:bg-[#128C7E] text-white p-4 rounded-full shadow-lg shadow-green-900/20 transition-all hover:scale-110 flex items-center gap-2 group animate-in fade-in slide-in-from-bottom-10">
-        <i data-lucide="message-circle" class="w-8 h-8 fill-current"></i>
-        <span class="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap font-bold text-lg">WhatsApp Destek</span>
+    <!-- WHATSAPP FAB -->
+    <a id="whatsappFloat" href="#" target="_blank" class="hidden fixed bottom-6 right-6 z-50 bg-[#25D366] hover:bg-[#20bd5a] text-white p-4 rounded-full shadow-xl shadow-green-600/30 transition-all hover:scale-105 hover:-translate-y-1 flex items-center gap-3 group animate-fade-in-up">
+        <i data-lucide="message-circle" class="w-7 h-7 fill-current"></i>
+        <span class="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap font-bold text-base">WhatsApp Destek</span>
     </a>
 
     <!-- JAVASCRIPT LOGIC -->
@@ -215,12 +224,11 @@
         let lastQuery = '';
         let currentYear = new Date().getFullYear();
 
-        // TELEFON FORMATLAMA & TEMİZLEME
+        // TELEFON FORMATLAMA
         function formatPhoneNumber(input) {
-            let value = input.value.replace(/\D/g, ''); // Sadece rakamlar
-            if (value.startsWith('0')) value = value.substring(1); // Baştaki 0'ı at
+            let value = input.value.replace(/\D/g, ''); 
+            if (value.startsWith('0')) value = value.substring(1); 
             
-            // Formatla: (5XX) XXX XX XX
             if (value.length > 0) {
                 if (value.length <= 3) value = '(' + value;
                 else if (value.length <= 6) value = '(' + value.substring(0, 3) + ') ' + value.substring(3);
@@ -230,13 +238,9 @@
             
             input.value = value;
             
-            // Temizle butonunu göster/gizle
             const clearBtn = document.getElementById('clearBtn');
-            if (value.length > 0) {
-                clearBtn.classList.remove('hidden');
-            } else {
-                clearBtn.classList.add('hidden');
-            }
+            if (value.length > 0) clearBtn.classList.remove('hidden');
+            else clearBtn.classList.add('hidden');
         }
 
         function clearInput() {
@@ -245,7 +249,6 @@
             document.getElementById('clearBtn').classList.add('hidden');
             input.focus();
             
-            // Sonuçları da temizleyebiliriz istenirse
             document.getElementById('resultArea').classList.add('hidden');
             document.getElementById('emptyState').classList.remove('hidden');
             document.getElementById('whatsappFloat').classList.add('hidden');
@@ -258,40 +261,19 @@
             return str;
         };
 
-        // --- FETCH DATA FUNCTION ---
+        // API FETCH
         async function fetchData(query, year, isSilent = false) {
             try {
-                if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("BURAYA")) {
-                    throw new Error("Lütfen Apps Script URL adresini kodun içine yapıştırın.");
-                }
-
-                // Temizleme (532...)
                 let cleanPhone = query.replace(/\D/g, '');
-                if (cleanPhone.length === 11 && cleanPhone.startsWith('0')) {
-                    cleanPhone = cleanPhone.substring(1);
-                }
+                if (cleanPhone.length === 11 && cleanPhone.startsWith('0')) cleanPhone = cleanPhone.substring(1);
 
                 const url = `${APPS_SCRIPT_URL}?phone=${encodeURIComponent(cleanPhone)}&year=${year}&t=${Date.now()}`;
-
                 const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error(`Bağlantı Hatası: ${response.status}`);
-                }
-
+                if (!response.ok) throw new Error(`Sunucu Hatası`);
                 const json = await response.json();
-
-                if (json.status === 'error') {
-                    throw new Error(json.message);
-                }
-
+                if (json.status === 'error') throw new Error(json.message);
                 return json.data || [];
-
             } catch (err) {
-                console.error("Fetch error:", err);
-                if (err.name === 'TypeError' && err.message.includes('fetch')) {
-                     throw new Error("Sunucuya bağlanılamadı. Apps Script 'Yeni Sürüm' olarak dağıtılmamış olabilir.");
-                }
                 if (!isSilent) throw err;
                 return [];
             }
@@ -300,9 +282,8 @@
         async function searchData(e) {
             if (e) e.preventDefault();
             const query = document.getElementById('searchInput').value.trim();
-            
-            // Sadece rakam kontrolü (en az 10 hane olmalı: 5XX XXX XX XX)
             const numericQuery = query.replace(/\D/g, '');
+            
             if(numericQuery.length < 10) {
                 const errorEl = document.getElementById('errorMsg');
                 errorEl.querySelector('span').textContent = "Lütfen geçerli bir telefon numarası giriniz.";
@@ -317,7 +298,6 @@
             const resultEl = document.getElementById('resultArea');
             const emptyState = document.getElementById('emptyState');
             const errorEl = document.getElementById('errorMsg');
-            const errorText = errorEl.querySelector('span');
             const floatBtn = document.getElementById('whatsappFloat');
 
             loadingEl.classList.remove('hidden');
@@ -334,23 +314,26 @@
                 if (results && results.length > 0) {
                     renderResults(results);
                     resultEl.classList.remove('hidden');
+                    
+                    // Smooth scroll to results
                     setTimeout(() => {
-                        resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        const yOffset = -20; 
+                        const y = resultEl.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                        window.scrollTo({top: y, behavior: 'smooth'});
                     }, 100);
 
-                    // Auto Refresh
                     autoRefreshInterval = setInterval(() => {
                         refreshDataSilent(lastQuery, currentYear);
                     }, 15000);
 
                 } else {
-                    errorText.textContent = "Girdiğiniz numara ile eşleşen kayıt bulunamadı.";
+                    errorEl.querySelector('span').textContent = "Bu numara ile kayıtlı bir servis işlemi bulunamadı.";
                     errorEl.classList.remove('hidden');
-                    emptyState.classList.remove('hidden'); // Boş durumu geri getir
+                    emptyState.classList.remove('hidden');
                 }
             } catch (err) {
                 loadingEl.classList.add('hidden');
-                errorText.textContent = err.message;
+                errorEl.querySelector('span').textContent = "Bağlantı hatası, lütfen tekrar deneyin.";
                 errorEl.classList.remove('hidden');
                 emptyState.classList.remove('hidden');
             }
@@ -363,111 +346,119 @@
             }
         }
 
-        // --- RENDER RESULTS ---
+        // RENDER FUNCTION (MODERN KART TASARIMI)
         function renderResults(results) {
             const resultContainer = document.getElementById('resultArea');
             const floatBtn = document.getElementById('whatsappFloat');
-            
-            // İlk kayıttan müşteri bilgisini al
             const customer = results[0];
 
-            // 1. WhatsApp Butonunu Yapılandır ve Göster
+            // WhatsApp
             let waMsg = "Merhaba, teknik servis süreçlerim hakkında bilgi almak istiyorum.";
-            if (results.length === 1) {
-                waMsg = `Merhaba, ${results[0].urun_adi} ürünüm ile ilgili bilgi almak istiyorum.`;
-            }
+            if (results.length === 1) waMsg = `Merhaba, ${results[0].urun_adi} ürünüm ile ilgili bilgi almak istiyorum.`;
             floatBtn.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMsg)}`;
             floatBtn.classList.remove('hidden');
             
             let htmlContent = `
-                <!-- Top Control Bar -->
-                <div class="flex justify-end mb-6">
-                     <div class="bg-green-100 text-green-700 text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm border border-green-200">
-                        <span class="w-2 h-2 bg-green-500 rounded-full live-dot"></span>
-                        CANLI GÜNCELLENİYOR (15sn)
+                <!-- Üst Bilgi Alanı -->
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-2">
+                     <div class="bg-white px-4 py-2 rounded-full border border-slate-100 shadow-sm flex items-center gap-2">
+                        <div class="w-8 h-8 bg-slate-900 rounded-full flex items-center justify-center text-white">
+                            <i data-lucide="user" class="w-4 h-4"></i>
+                        </div>
+                        <div class="text-sm">
+                            <span class="block font-bold text-slate-900 leading-none">${customer.musteri}</span>
+                            <span class="text-xs text-slate-400 font-mono">${maskData(customer.telefon, 'phone')}</span>
+                        </div>
                      </div>
-                </div>
 
-                <!-- Müşteri Özeti -->
-                <div class="bg-dark text-white rounded-3xl p-6 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 border border-white/10 mb-8">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-dark shadow-glow">
-                            <i data-lucide="user" class="w-6 h-6"></i>
-                        </div>
-                        <div>
-                            <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Müşteri</p>
-                            <h2 class="text-xl font-bold">${customer.musteri}</h2>
-                        </div>
-                    </div>
-                    <div class="bg-white/10 px-4 py-2 rounded-full flex items-center gap-2">
-                        <i data-lucide="phone" class="w-4 h-4 text-slate-300"></i>
-                        <span class="font-mono text-sm">${maskData(customer.telefon, 'phone')}</span>
-                    </div>
+                     <div class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-2 border border-emerald-100 animate-pulse">
+                        <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                        CANLI TAKİP AKTİF
+                     </div>
                 </div>
             `;
 
-            // Ürünleri Listele
             results.forEach((data, index) => {
                 const rawStatus = data.ariza_durumu || '';
                 const isCompleted = rawStatus.toLowerCase().includes('tamam') || rawStatus.toLowerCase().includes('teslim');
+                const isWaiting = rawStatus.toLowerCase().includes('parça') || rawStatus.toLowerCase().includes('bekliyor');
                 
-                // Durum rengi ve yazı tipi güncellendi
-                const statusColorClass = isCompleted ? 'text-green-700' : 'text-slate-800'; 
-                const iconColorClass = isCompleted ? 'bg-green-500 text-white shadow-green-200' : 'bg-primary text-dark shadow-amber-200';
-                const iconSvg = isCompleted ? '<i data-lucide="check-circle-2" class="w-6 h-6"></i>' : '<i data-lucide="package" class="w-6 h-6"></i>';
+                // Durum Renkleri
+                let statusBadgeClass = 'bg-slate-100 text-slate-600 border-slate-200';
+                let iconBg = 'bg-slate-100 text-slate-500';
+                let icon = 'package';
 
-                // PLANLANAN TARİH GÖSTERİM MANTIĞI
-                let showPlan = false;
-                let planlananTarihHTML = '';
-                
+                if (isCompleted) {
+                    statusBadgeClass = 'bg-emerald-100 text-emerald-700 border-emerald-200';
+                    iconBg = 'bg-emerald-500 text-white shadow-lg shadow-emerald-200';
+                    icon = 'check-circle-2';
+                } else if (isWaiting) {
+                    statusBadgeClass = 'bg-amber-100 text-amber-700 border-amber-200';
+                    iconBg = 'bg-amber-500 text-white shadow-lg shadow-amber-200';
+                    icon = 'clock';
+                } else {
+                    // İşlemde vb.
+                    statusBadgeClass = 'bg-blue-100 text-blue-700 border-blue-200';
+                    iconBg = 'bg-blue-500 text-white shadow-lg shadow-blue-200';
+                    icon = 'settings-2';
+                }
+
+                // Tahmini Süre Kutusu
+                let planlananHTML = '';
                 if (data.ariza_durumu && data.ariza_durumu.toLowerCase().includes('parça geldi')) {
-                    showPlan = true;
-                    planlananTarihHTML = `
-                        <div class="p-5 border-t border-slate-100 bg-slate-50/50">
-                            <div class="flex items-center gap-3 bg-blue-50 text-blue-700 px-4 py-3 rounded-xl border border-blue-100">
-                                <i data-lucide="clock" class="w-5 h-5 flex-shrink-0"></i>
-                                <div>
-                                    <p class="text-xs font-bold opacity-80 uppercase">Tahmini Çözüm Süreci</p>
-                                    <p class="text-sm font-bold">15 gün içerisinde teslimat planlanmaktadır.</p>
-                                </div>
+                    planlananHTML = `
+                        <div class="mt-5 p-4 bg-blue-50/50 rounded-xl border border-blue-100 flex gap-3 items-start">
+                            <div class="p-2 bg-white rounded-lg border border-blue-100 text-blue-600 shadow-sm">
+                                <i data-lucide="hourglass" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-blue-400 uppercase tracking-wider mb-0.5">Tahmini Çözüm Süreci</p>
+                                <p class="text-sm font-bold text-slate-700">15 gün içerisinde teslimat planlanmaktadır.</p>
                             </div>
                         </div>
                     `;
                 }
 
                 htmlContent += `
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-4 hover:shadow-md transition-shadow duration-300">
+                    <div class="bg-white rounded-3xl shadow-soft border border-white hover:border-amber-100 hover:shadow-lg transition-all duration-300 p-6 sm:p-8 animate-fade-in-up" style="animation-delay: ${index * 100}ms">
                         
-                        <!-- Header (SADELEŞTİRİLDİ) - TIKLANABİLİR DEĞİL -->
-                        <div class="p-5 flex flex-col sm:flex-row sm:items-center gap-4 bg-white relative">
+                        <div class="flex flex-col sm:flex-row gap-6">
                             
-                            <!-- Icon & Main Info (Sol Taraf) -->
-                            <div class="flex items-center gap-4 flex-1">
-                                <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${iconColorClass}">
-                                    ${iconSvg}
-                                </div>
-                                <div>
-                                    <!-- ÜRÜN ADI -->
-                                    <h3 class="text-lg font-black text-slate-900 leading-tight">${data.urun_adi || 'Ürün Adı Yok'}</h3>
-                                    <!-- TARİH -->
-                                    <div class="flex items-center gap-2 mt-1">
-                                        <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
-                                        <span class="text-xs font-medium text-slate-500">${data.ariza_tarihi || '-'}</span>
-                                    </div>
-                                </div>
+                            <!-- Sol: İkon -->
+                            <div class="hidden sm:flex ${iconBg} w-16 h-16 rounded-2xl items-center justify-center flex-shrink-0 transition-transform hover:scale-105">
+                                <i data-lucide="${icon}" class="w-8 h-8"></i>
                             </div>
 
-                            <!-- Status & Action (Sağ Taraf) -->
-                            <div class="flex items-center justify-between sm:justify-end gap-4 mt-2 sm:mt-0 pl-[4rem] sm:pl-0">
-                                <div class="text-left sm:text-right">
-                                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Durum</span>
-                                    <p class="text-lg font-extrabold ${statusColorClass} tracking-tight">${data.ariza_durumu}</p>
+                            <!-- Orta: Bilgiler -->
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start gap-4">
+                                    <div class="flex items-center gap-3 sm:hidden mb-2">
+                                        <div class="${iconBg} w-10 h-10 rounded-xl flex items-center justify-center">
+                                            <i data-lucide="${icon}" class="w-5 h-5"></i>
+                                        </div>
+                                        <span class="px-3 py-1 rounded-full text-xs font-bold border ${statusBadgeClass}">
+                                            ${data.ariza_durumu}
+                                        </span>
+                                    </div>
+                                    
+                                    <div>
+                                        <h3 class="text-xl font-bold text-slate-900 leading-tight mb-1">${data.urun_adi || 'Ürün Belirtilmemiş'}</h3>
+                                        <div class="flex items-center gap-2 text-sm text-slate-500 font-medium">
+                                            <i data-lucide="calendar-days" class="w-4 h-4"></i>
+                                            <span>Kayıt: ${data.ariza_tarihi || '-'}</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Desktop Badge -->
+                                    <span class="hidden sm:inline-block px-4 py-1.5 rounded-full text-sm font-bold border ${statusBadgeClass}">
+                                        ${data.ariza_durumu}
+                                    </span>
                                 </div>
+
+                                <!-- Tahmini Süre Varsa Buraya Gelir -->
+                                ${planlananHTML}
                             </div>
                         </div>
-
-                        <!-- Bilgi (Sadece Plan Varsa Görünür, Altına eklenir) -->
-                        ${showPlan ? planlananTarihHTML : ''}
                     </div>
                 `;
             });
