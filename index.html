@@ -288,7 +288,7 @@
             
             if(numericQuery.length < 10) {
                 const errorEl = document.getElementById('errorMsg');
-                errorEl.querySelector('span').textContent = "Lütfen geçerli bir telefon numarası giriniz.";
+                errorEl.querySelector('span').textContent = "Eksik veya hatalı numara girdiniz. Lütfen kontrol edin.";
                 errorEl.classList.remove('hidden');
                 return;
             }
@@ -338,7 +338,17 @@
                 }
             } catch (err) {
                 loadingEl.classList.add('hidden');
-                errorEl.querySelector('span').textContent = "Bağlantı hatası, lütfen tekrar deneyin.";
+                
+                // Hata mesajını yakala ve göster
+                let message = err.message;
+                if (message === 'Failed to fetch' || message.includes('Sunucu Hatası')) {
+                    message = "Bağlantı hatası. Lütfen numaranızı ve internetinizi kontrol edin.";
+                } else if (message.includes('bulunamadı')) {
+                    // Backend'den gelen "bulunamadı" mesajını direkt göster
+                    message = "Bu numara ile kayıtlı bir servis işlemi bulunamadı.";
+                }
+
+                errorEl.querySelector('span').textContent = message;
                 errorEl.classList.remove('hidden');
                 emptyState.classList.remove('hidden');
             }
